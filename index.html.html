@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Envoy HOS Assessment — Citadel Cambodia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.3/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --navy:#07003F;
+    --navy-soft:#151148;
+    --cyan:#00D6FA;
+    --green:#00B742;
+    --amber:#FFB200;
+    --paper:#F6F7FB;
+    --paper-card:#FFFFFF;
+    --ink:#0D0B2E;
+    --ink-soft:#5A5C7E;
+    --line:#E3E4EF;
+    --danger:#E0356B;
+    --radius:14px;
+    --shadow: 0 1px 2px rgba(7,0,63,0.04), 0 12px 32px -16px rgba(7,0,63,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Manrope',system-ui,-apple-system,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  #app{max-width:920px;margin:0 auto;padding:28px 20px 80px;}
+
+  /* ---------- top brand bar ---------- */
+  .brandbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:30px;height:30px;flex:none;}
+  .brand-text{font-weight:800;font-size:15px;letter-spacing:0.2px;color:var(--navy);}
+  .brand-sub{font-size:12px;color:var(--ink-soft);font-weight:500;}
+
+  .screen{display:none;}
+  .screen.active{display:block;animation:fadein .35s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  @media (prefers-reduced-motion: reduce){.screen.active{animation:none;}}
+
+  .card{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:36px;
+  }
+  @media (max-width:640px){ .card{padding:24px 18px;} }
+
+  /* ---------- registration ---------- */
+  .hero-title{font-size:30px;font-weight:800;line-height:1.15;margin:0 0 10px;color:var(--navy);}
+  .hero-sub{font-size:15.5px;color:var(--ink-soft);line-height:1.55;margin:0 0 28px;max-width:56ch;}
+  .meta-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
+  .pill{font-size:12.5px;font-weight:600;color:var(--navy);background:#EAF9FE;border:1px solid #CDF0FA;padding:6px 12px;border-radius:100px;}
+
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:13.5px;font-weight:700;margin-bottom:7px;color:var(--navy);}
+  .field input{
+    width:100%;font-size:15px;font-family:inherit;padding:12px 14px;
+    border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);
+    transition:border-color .15s ease;
+  }
+  .field input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,214,250,0.18);}
+  .field input.err{border-color:var(--danger);}
+  .field .errmsg{display:none;font-size:12.5px;color:var(--danger);margin-top:6px;font-weight:600;}
+  .field.has-err .errmsg{display:block;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:560px){ .row2{grid-template-columns:1fr;} }
+
+  .btn{
+    appearance:none;border:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:15px;
+    padding:14px 26px;border-radius:10px;transition:transform .12s ease, box-shadow .12s ease, background .15s ease;
+    display:inline-flex;align-items:center;gap:8px;justify-content:center;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:var(--navy);color:#fff;}
+  .btn-primary:hover{background:var(--navy-soft);}
+  .btn-primary:disabled{background:#B9BAD1;cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--navy);border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--navy);}
+  .btn-cyan{background:var(--cyan);color:var(--navy);}
+  .btn-cyan:hover{background:#1fdcff;}
+  .btn-block{width:100%;}
+  .btn[disabled]{opacity:.55;cursor:not-allowed;}
+
+  /* ---------- quiz ---------- */
+  .progress-wrap{margin-bottom:26px;}
+  .progress-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
+  .progress-label{font-size:13.5px;font-weight:700;color:var(--navy);}
+  .progress-count{font-size:12.5px;color:var(--ink-soft);font-weight:600;font-variant-numeric:tabular-nums;}
+  .progress-track{height:7px;border-radius:100px;background:var(--line);overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--navy));border-radius:100px;transition:width .35s ease;}
+
+  .section-title{font-size:22px;font-weight:800;color:var(--navy);margin:0 0 4px;}
+  .section-desc{font-size:14px;color:var(--ink-soft);margin:0 0 26px;line-height:1.5;}
+
+  .question{padding:22px 0;border-top:1px solid var(--line);}
+  .question:first-of-type{border-top:none;padding-top:4px;}
+  .q-flag{display:none;font-size:12px;font-weight:700;color:var(--danger);margin-top:10px;}
+  .question.unanswered .q-flag{display:block;}
+  .question.unanswered .q-num{background:var(--danger);}
+  .q-head{display:flex;gap:12px;margin-bottom:14px;}
+  .q-num{flex:none;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+  .q-text{font-size:15.5px;font-weight:700;line-height:1.5;padding-top:2px;}
+  .options{display:flex;flex-direction:column;gap:9px;margin-left:38px;}
+  @media (max-width:560px){ .options{margin-left:0;} }
+  .option{
+    display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1.5px solid var(--line);
+    border-radius:10px;cursor:pointer;transition:border-color .12s ease, background .12s ease;
+  }
+  .option:hover{border-color:#B9E9FA;background:#FAFDFF;}
+  .option input{margin-top:3px;accent-color:var(--navy);flex:none;}
+  .option span{font-size:14.5px;line-height:1.5;}
+  .option.selected{border-color:var(--navy);background:#F1F1FA;}
+
+  .quiz-nav{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:22px;border-top:1px solid var(--line);}
+  .quiz-nav .spacer{flex:1;}
+
+  /* ---------- results / certificate ---------- */
+  #certificate{
+    background:var(--navy);
+    color:#fff;
+    border-radius:18px;
+    padding:44px 40px 36px;
+    position:relative;
+    overflow:hidden;
+  }
+  @media (max-width:640px){ #certificate{padding:32px 22px 28px;} }
+  #certificate::before{
+    content:"";position:absolute;top:0;right:0;width:120px;height:120px;
+    background:var(--cyan);clip-path:polygon(100% 0, 0 0, 100% 100%);opacity:0.9;
+  }
+  .cert-kicker{font-size:12.5px;font-weight:700;color:var(--cyan);letter-spacing:0.3px;margin-bottom:14px;position:relative;z-index:1;}
+  .cert-headline{font-size:28px;font-weight:800;margin:0 0 6px;position:relative;z-index:1;max-width:80%;}
+  .cert-sub{font-size:14.5px;color:#C9CBEB;margin:0 0 30px;position:relative;z-index:1;max-width:70ch;line-height:1.55;}
+
+  .cert-score-row{display:flex;align-items:flex-end;gap:34px;margin-bottom:30px;flex-wrap:wrap;position:relative;z-index:1;}
+  .cert-score-num{font-size:72px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;}
+  .cert-score-num sup{font-size:30px;font-weight:700;margin-left:2px;}
+  .cert-score-frac{font-size:14px;color:#B7B9DE;font-weight:600;margin-top:8px;}
+
+  .cert-divider{height:1px;background:rgba(255,255,255,0.16);margin:0 0 22px;position:relative;z-index:1;}
+
+  .cert-meta{display:grid;grid-template-columns:1fr 1fr;gap:16px 28px;position:relative;z-index:1;margin-bottom:26px;}
+  @media (max-width:560px){ .cert-meta{grid-template-columns:1fr;} }
+  .cert-meta-item .lab{font-size:11.5px;color:#9799C6;font-weight:700;margin-bottom:3px;}
+  .cert-meta-item .val{font-size:14.5px;font-weight:700;}
+
+  .cert-sections{position:relative;z-index:1;}
+  .cert-sections .lab{font-size:11.5px;color:#9799C6;font-weight:700;margin-bottom:12px;}
+  .sec-row{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+  .sec-row:last-child{margin-bottom:0;}
+  .sec-row .sec-name{font-size:13.5px;font-weight:700;width:170px;flex:none;}
+  @media (max-width:560px){ .sec-row .sec-name{width:110px;font-size:12.5px;} }
+  .sec-bar-track{flex:1;height:8px;border-radius:100px;background:rgba(255,255,255,0.14);overflow:hidden;}
+  .sec-bar-fill{height:100%;border-radius:100px;background:var(--cyan);}
+  .sec-row .sec-score{font-size:13px;font-weight:700;width:52px;text-align:right;flex:none;font-variant-numeric:tabular-nums;}
+
+  .cert-footer{margin-top:30px;padding-top:18px;border-top:1px solid rgba(255,255,255,0.14);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;position:relative;z-index:1;}
+  .cert-footer-brand{font-size:12px;color:#9799C6;font-weight:600;}
+  .cert-footer-id{font-size:11px;color:#6E70A0;font-weight:600;font-variant-numeric:tabular-nums;}
+
+  .results-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px;}
+  .save-status{font-size:13px;font-weight:600;margin-top:14px;min-height:18px;}
+  .save-status.ok{color:var(--green);}
+  .save-status.err{color:var(--danger);}
+
+  .review-toggle{margin-top:34px;}
+  .review-list{display:none;margin-top:22px;}
+  .review-list.open{display:block;}
+  .rev-section{margin-bottom:8px;}
+  .rev-section-head{font-size:15px;font-weight:800;color:var(--navy);margin:26px 0 4px;}
+  .rev-section-head:first-child{margin-top:0;}
+  .rev-q{padding:16px 0;border-top:1px solid var(--line);display:flex;gap:12px;}
+  .rev-icon{flex:none;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;margin-top:1px;}
+  .rev-icon.ok{background:var(--green);}
+  .rev-icon.no{background:var(--danger);}
+  .rev-q-text{font-size:14.5px;font-weight:700;margin-bottom:6px;line-height:1.5;}
+  .rev-answer{font-size:13.5px;color:var(--ink-soft);line-height:1.6;}
+  .rev-answer b{color:var(--ink);font-weight:700;}
+  .rev-answer .correct-line{color:var(--green);font-weight:700;}
+
+  .footnote{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:22px;}
+
+  /* ---------- dashboard ---------- */
+  .btn-sm{padding:9px 16px;font-size:13.5px;}
+  .dash-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+  .dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  @media (max-width:700px){ .dash-stats{grid-template-columns:1fr 1fr;} }
+  .dstat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 16px;}
+  .dstat-num{font-size:26px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.1;}
+  .dstat-lab{font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-top:4px;}
+  .dash-toolbar{display:flex;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .dash-toolbar input{flex:1;min-width:180px;font-family:inherit;font-size:14px;padding:9px 13px;border:1.5px solid var(--line);border-radius:9px;}
+  .dash-toolbar input:focus{outline:none;border-color:var(--cyan);}
+  .dash-table-wrap{overflow-x:auto;}
+  .dash-table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px;}
+  .dash-table thead th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:0.3px;color:var(--ink-soft);font-weight:700;padding:10px 20px;border-bottom:1px solid var(--line);background:#FAFBFD;}
+  .dash-table tbody td{padding:13px 20px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  .dash-table tbody tr{cursor:pointer;transition:background .1s ease;}
+  .dash-table tbody tr:hover{background:#FAFDFF;}
+  .dash-table tbody tr:last-child td{border-bottom:none;}
+  .dash-name{font-weight:700;color:var(--ink);}
+  .dash-email{font-size:12px;color:var(--ink-soft);}
+  .score-chip{display:inline-block;padding:3px 10px;border-radius:100px;font-weight:800;font-size:13px;font-variant-numeric:tabular-nums;}
+  .score-chip.hi{background:#E4F9EC;color:#0A7A34;}
+  .score-chip.mid{background:#FFF3DB;color:#8A6200;}
+  .score-chip.lo{background:#FCE7EE;color:#B31249;}
+  .mini-frac{font-size:12.5px;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+  .dash-empty{padding:60px 20px;text-align:center;color:var(--ink-soft);font-size:14px;}
+
+  .detail-overlay{display:none;position:fixed;inset:0;background:rgba(7,0,63,0.45);z-index:50;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;}
+  .detail-overlay.open{display:flex;}
+  .detail-panel{background:#fff;border-radius:16px;max-width:680px;width:100%;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+  .detail-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px;}
+  .detail-name{font-size:19px;font-weight:800;color:var(--navy);}
+  .detail-meta{font-size:13px;color:var(--ink-soft);margin-top:3px;}
+  .detail-score{font-size:15px;font-weight:700;margin-bottom:18px;color:var(--navy);}
+  .dd-sections{margin-bottom:8px;}
+
+  /* ---------- print ---------- */
+  @media print{
+    body *{visibility:hidden;}
+    #certificate, #certificate *{visibility:visible;}
+    #certificate{position:absolute;top:0;left:0;width:100%;margin:0;border-radius:0;}
+    .brandbar, .results-actions, .review-toggle, .review-list, .footnote{display:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="brandbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 14 L18 4 V14 H4Z" fill="#00D6FA"/>
+        <path d="M18 4 H32 V26 H18 V4Z" fill="#07003F"/>
+        <path d="M4 14 H18 V36 L4 26 V14Z" fill="#07003F"/>
+      </svg>
+      <div>
+        <div class="brand-text">Envoy HOS Assessment</div>
+        <div class="brand-sub">PDI Technologies · Citadel Cambodia</div>
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="btn-open-dashboard" type="button" style="display:none;">Organizer dashboard</button>
+  </div>
+
+  <!-- ============ SCREEN 1: REGISTRATION ============ -->
+  <div class="screen active" id="screen-register">
+    <div class="card">
+      <div class="meta-pills">
+        <span class="pill">45 questions</span>
+        <span class="pill">3 modules</span>
+        <span class="pill">~30–40 min</span>
+      </div>
+      <h1 class="hero-title">Envoy HOS Knowledge Check</h1>
+      <p class="hero-sub">This assessment covers Pricing Manager, Promotion Manager, and Finance &amp; Accounting. Enter your details below to begin — your results are scored automatically and you'll get a certificate to save at the end.</p>
+
+      <form id="reg-form" novalidate>
+        <div class="field" id="f-name">
+          <label for="in-name">Full name</label>
+          <input type="text" id="in-name" autocomplete="name" placeholder="e.g. Sokha Chan">
+          <div class="errmsg">Enter your full name to continue.</div>
+        </div>
+        <div class="row2">
+          <div class="field" id="f-email">
+            <label for="in-email">Email address</label>
+            <input type="email" id="in-email" autocomplete="email" placeholder="you@company.com">
+            <div class="errmsg">Enter a valid email address.</div>
+          </div>
+          <div class="field" id="f-company">
+            <label for="in-company">Company name</label>
+            <input type="text" id="in-company" autocomplete="organization" placeholder="e.g. Citadel Cambodia">
+            <div class="errmsg">Enter your company name.</div>
+          </div>
+        </div>
+        <div class="field" id="f-dept">
+          <label for="in-dept">Department</label>
+          <input type="text" id="in-dept" placeholder="e.g. Pricing, Promotions, Finance & Accounting">
+          <div class="errmsg">Enter your department.</div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Start assessment</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 2: QUIZ ============ -->
+  <div class="screen" id="screen-quiz">
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <span class="progress-label" id="progress-label">Section 1 of 3 — Pricing Manager</span>
+        <span class="progress-count" id="progress-count">0 / 45 answered</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title" id="sec-title">Pricing Manager</h2>
+      <p class="section-desc" id="sec-desc">Price Book (Price/Cost Changes, EDI Price Book, Utilities, Setup), System Reports, Dry Goods (Vendors), Fuel.</p>
+      <div id="questions-container"></div>
+
+      <div class="quiz-nav">
+        <button class="btn btn-ghost" id="btn-back" type="button">Back</button>
+        <div class="spacer"></div>
+        <button class="btn btn-primary" id="btn-next" type="button">Next section</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 3: RESULTS ============ -->
+  <div class="screen" id="screen-results">
+    <div id="certificate">
+      <div class="cert-kicker">ENVOY HOS ASSESSMENT · CERTIFICATE OF COMPLETION</div>
+      <h2 class="cert-headline" id="cert-headline">Well done, [Name]</h2>
+      <p class="cert-sub" id="cert-sub">You've completed the Envoy HOS Knowledge Check.</p>
+
+      <div class="cert-score-row">
+        <div>
+          <div class="cert-score-num" id="cert-score">0<sup>%</sup></div>
+          <div class="cert-score-frac" id="cert-frac">0 of 45 correct</div>
+        </div>
+      </div>
+
+      <div class="cert-divider"></div>
+
+      <div class="cert-meta">
+        <div class="cert-meta-item"><div class="lab">PARTICIPANT</div><div class="val" id="m-name">—</div></div>
+        <div class="cert-meta-item"><div class="lab">EMAIL</div><div class="val" id="m-email">—</div></div>
+        <div class="cert-meta-item"><div class="lab">COMPANY</div><div class="val" id="m-company">—</div></div>
+        <div class="cert-meta-item"><div class="lab">DEPARTMENT</div><div class="val" id="m-dept">—</div></div>
+      </div>
+
+      <div class="cert-sections">
+        <div class="lab">SCORE BY MODULE</div>
+        <div id="sec-breakdown"></div>
+      </div>
+
+      <div class="cert-footer">
+        <div class="cert-footer-brand">PDI Technologies · Envoy HOS Training for Citadel Cambodia</div>
+        <div class="cert-footer-id" id="cert-id">Completed —</div>
+      </div>
+    </div>
+
+    <div class="results-actions">
+      <button class="btn btn-primary" id="btn-print" type="button">Print certificate</button>
+      <button class="btn btn-cyan" id="btn-pdf" type="button">Download as PDF</button>
+      <button class="btn btn-ghost" id="btn-img" type="button">Download as image</button>
+    </div>
+    <div class="save-status" id="save-status"></div>
+
+    <div class="review-toggle">
+      <button class="btn btn-ghost" id="btn-review" type="button">Review my answers</button>
+    </div>
+    <div class="review-list" id="review-list"></div>
+
+    <p class="footnote">Your results were generated locally in your browser for this session.</p>
+  </div>
+
+  <!-- ============ SCREEN 4: ORGANIZER DASHBOARD ============ -->
+  <div class="screen" id="screen-dashboard">
+    <div class="dash-head">
+      <div>
+        <h1 class="hero-title" style="font-size:24px;margin-bottom:4px;">Organizer dashboard</h1>
+        <p class="hero-sub" style="margin-bottom:0;font-size:14px;">Live results from everyone who has taken this assessment.</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="btn-close-dashboard" type="button">Close dashboard</button>
+    </div>
+
+    <div id="dash-gate" class="card" style="display:none;">
+      <p style="margin:0;font-size:14.5px;color:var(--ink-soft);">This view is only available to the person who owns this assessment. If you administer this training, open the link from your own My Artifacts list.</p>
+    </div>
+
+    <div id="dash-nodb" class="card" style="display:none;">
+      <p style="margin:0;font-size:14.5px;color:var(--ink-soft);">Live results aren't available in this view. Reopen the assessment from claude.ai to use the organizer dashboard.</p>
+    </div>
+
+    <div id="dash-body" style="display:none;">
+      <div class="dash-stats">
+        <div class="dstat"><div class="dstat-num" id="dstat-count">0</div><div class="dstat-lab">Submissions</div></div>
+        <div class="dstat"><div class="dstat-num" id="dstat-avg">0%</div><div class="dstat-lab">Average score</div></div>
+        <div class="dstat"><div class="dstat-num" id="dstat-pass">0%</div><div class="dstat-lab">Scored 70%+</div></div>
+        <div class="dstat"><div class="dstat-num" id="dstat-low">–</div><div class="dstat-lab">Weakest module</div></div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="dash-toolbar">
+          <input type="text" id="dash-search" placeholder="Search by name, email or company…">
+          <button class="btn btn-ghost btn-sm" id="btn-export-csv" type="button">Export CSV</button>
+        </div>
+        <div class="dash-table-wrap">
+          <table class="dash-table" id="dash-table">
+            <thead>
+              <tr>
+                <th>Participant</th><th>Company</th><th>Department</th>
+                <th>Score</th><th>Pricing</th><th>Promotion</th><th>Finance</th><th>Submitted</th>
+              </tr>
+            </thead>
+            <tbody id="dash-tbody"></tbody>
+          </table>
+        </div>
+        <div id="dash-empty" class="dash-empty" style="display:none;">No submissions yet. Results will appear here as soon as someone completes the assessment.</div>
+      </div>
+    </div>
+
+    <div id="dash-detail-overlay" class="detail-overlay">
+      <div class="detail-panel">
+        <div class="detail-panel-head">
+          <div>
+            <div class="detail-name" id="dd-name">—</div>
+            <div class="detail-meta" id="dd-meta">—</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="btn-close-detail" type="button">Close</button>
+        </div>
+        <div class="detail-score" id="dd-score">—</div>
+        <div id="dd-sections" class="dd-sections"></div>
+        <div id="dd-review" class="review-list open"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= QUESTION DATA ================= */
+  // Each option array is [a, b, c, d]; correct is 0-based index.
+  const SECTIONS = [
+    {
+      name: "Pricing Manager",
+      desc: "Price Book (Price/Cost Changes, EDI Price Book, Utilities, Setup), System Reports, Dry Goods (Vendors), Fuel.",
+      questions: [
+        { q:"Which Envoy menu path is used to change the price of a selected group of products across multiple stores at once?",
+          options:["Dry Goods → Reordering → Reordering","Price Book → Price/Cost Changes → Global Price Change","Accounting → Shift Register","System Reports → Price Book → Item Prices"], correct:1 },
+        { q:"The Global Price Change screen is completed using three tabs. In which order do they appear?",
+          options:["Setup, Import, Post","Products, Stores, Effective Date","Range, Change, Preview","Select, Approve, Publish"], correct:2 },
+        { q:"On the Global Price Change Range tab, which two options are used to select the PRODUCTS (Inventory Range)?",
+          options:["By Corporate Hierarchy and By Store Groups","By Inventory Hierarchy and By Price Groups","By Vendor and By Tender","By Fiscal Period and By Register"], correct:1 },
+        { q:"Which of the following is NOT a method of generating the new price on the Global Price Change – Change tab?",
+          options:["Percentage Increase/Decrease","Base Profit","Flat Amount","Weighted Average Tender"], correct:3 },
+        { q:"What is the purpose of a Price Group in Envoy?",
+          options:["To group stores that share the same corporate level","To group products that are similar in some way but are not in the same inventory level or supplied by the same vendor — for example all 12-ounce sodas regardless of brand","To group general ledger accounts for financial reporting","To group promotions that run in the same period"], correct:1 },
+        { q:"During a price change, Envoy flags an item as an exception when the new price falls below a minimum profit margin. Where is that minimum margin defined?",
+          options:["In the Gross Profit Minimum/Base/Maximum fields of the Inventory Hierarchy level (category)","In the Tender setup in the System module","In the Fiscal Year setup","In the Rounding Rule attached to the store"], correct:0 },
+        { q:"What does a Characteristic Code attached to an inventory category define?",
+          options:["The vendor's payment terms and order codes","The general ledger account the category posts to","The type of taxes that can be applied, any age restrictions, hour restrictions, other POS terms, and the Rounding Rule associated with the category","The store's position in the corporate hierarchy"], correct:2 },
+        { q:"A Rounding Rule is set to round the 2nd digit from the right, with rounding digits 9 and 5. A calculated price of $24.47 becomes:",
+          options:["$24.40","$24.45","$24.50","$24.99"], correct:2 },
+        { q:"A price change was applied to the wrong range of products. Which Price Book option reverses it?",
+          options:["Undo Price Change","Timestamp Update","Move UPC","Undo Update in the Shift Register"], correct:0 },
+        { q:"In the EDI Price Book process, where does imported vendor data sit before it is posted to the actual Envoy product tables?",
+          options:["It is written directly to the product tables on import","In temporary staging tables, viewed and edited through the Price Book Import Preview screen","In the general ledger suspense account","In the Promotion Group tables"], correct:1 },
+        { q:"If errors are found during the EDI Price Book verification routine and you do not fix them in the Price Book Import Preview screen, what happens?",
+          options:["Only the valid records are posted and the errors are ignored","The errors are posted with a warning flag","The entire product data batch is rejected","The batch posts to the next fiscal period"], correct:2 },
+        { q:"Which Price Book utility changes the timestamp on selected SKUs or inventory levels so that products are resent to the stores?",
+          options:["Lookup UPC/PLU","Move UPC","Price Book Wizard","Timestamp Update"], correct:3 },
+        { q:"What does the Store PriceBook Utility do?",
+          options:["It streamlines products across multiple stores by matching products from a nominated source store to a target store, adding or removing products as required","It exports the general ledger to an external accounting package","It reconciles tender totals between the POS and the bank","It prints purchase orders for a selected vendor"], correct:0 },
+        { q:"When can a UPC NOT be moved from one SKU to another using the Move UPC utility?",
+          options:["When the SKU belongs to a price group","When the SKU has only one UPC attached to it","When the product is attached to a vendor","When the store is a skeleton store"], correct:1 },
+        { q:"Which System Report shows the old and new price for every product, together with who made the change and when?",
+          options:["Item Prices","Price Change History","Average Cost (WAC) exception report","Daily Summary Report"], correct:1 }
+      ]
+    },
+    {
+      name: "Promotion Manager",
+      desc: "Price Book → Promotions (Promotion Manager, Promotion Groups, Discounts) and System Reports → Promotions.",
+      questions: [
+        { q:"Before you can configure any promotion in the Promotion Manager, what must already exist?",
+          options:["An open fiscal year","At least one Promotion Group","A posted purchase register","A reconciled bank account"], correct:1 },
+        { q:"Which menu path is used to set up Promotion Groups?",
+          options:["Price Book → Promotions → Setup → Promotion Groups","Price Book → Utilities → Promotion Groups","System Reports → Promotions","Dry Goods → Setup → Promotion Groups"], correct:0 },
+        { q:"Items within a Promotion Group are identified by:",
+          options:["General ledger account number","Tender code","PLU, SKU or Barcode","Fiscal period"], correct:2 },
+        { q:"A marketing manager asks you to discount one single chocolate bar SKU. What must you do in Envoy?",
+          options:["Apply the promotion directly to the item from the Products screen","Place the item in a Promotion Group of its own, because promotions can only be applied to Promotion Groups","Use a Global Price Change instead — single items cannot be promoted","Raise the request with the store, as single-item promotions are set at store level"], correct:1 },
+        { q:"Which of the following is NOT one of the three basic promotion types available in the Promotion Manager?",
+          options:["Promote N Items from a single Promotion Group based on a fixed discount","Promote N Items from a single Promotion Group based on variable discounts","Promote a Menu or List of Items from multiple Promotion Groups","Promote a Tender Type across multiple stores"], correct:3 },
+        { q:"Which discount type is used only with Combo promotions?",
+          options:["Items are sold at a fixed price","Customer gets a value discount","Customer gets a percentage discount","Discount on cheapest item"], correct:3 },
+        { q:"What is the key operational difference between a Combo promotion and a Menu promotion?",
+          options:["A Combo triggers automatically and contains only mandatory items, whereas a Menu contains optional items and the cashier must enter a code at the POS to trigger it","A Combo applies only to fuel and a Menu only to dry goods","A Combo cannot be reported on in System Reports","There is no functional difference — the names are interchangeable"], correct:0 },
+        { q:"On the Promotions List screen, what does the In Effect Now field tell you?",
+          options:["Whether the promotion has been approved by finance","Whether the promotion has been exported to the stores","Whether the promotion is currently active, based automatically on the current date and time and the promotion details — a green check means in effect, a red cross means not in effect","Whether the promotion is profitable"], correct:2 },
+        { q:"What is the maximum length of a Promotion Group name?",
+          options:["8 characters","15 characters","30 characters","There is no limit"], correct:1 },
+        { q:"Which Promotions user right allows a user to see promotions but change nothing?",
+          options:["View existing Promotions","Add and Remove Promotions","View and Modify existing Promotions","Security Reports right"], correct:0 },
+        { q:"Three new stores are added to the Envoy system while several promotions are running. What happens to those promotions at the new stores?",
+          options:["The new stores automatically inherit all existing promotions","The new stores are not allocated to any existing promotion — they must be allocated manually","All existing promotions are cancelled and must be rebuilt","Envoy re-exports every promotion to every store overnight"], correct:1 },
+        { q:"When you apply or remove a Skeleton Store on a promotion, what is the effect?",
+          options:["Only that individual store is affected","All stores that form part of that skeleton inherit the change","The change is rejected — skeleton stores cannot hold promotions","The promotion must first be re-imported through EDI"], correct:1 },
+        { q:"You configure a promotion and Envoy warns you that the POS at certain stores does not support the functionality. What are your options?",
+          options:["Envoy sets the promotion up anyway and the stores ignore it","Change the promotion configuration, cancel the promotion, or remove the promotion from the stores whose POS does not support it","The promotion is deleted automatically","The unsupported stores are removed from the Envoy system"], correct:1 },
+        { q:"A promotion is required to run on premium fuel every Friday between 8:00 am and 10:00 am. Which repeat options does Envoy support for this?",
+          options:["Hourly repeats only","Monthly repeats only","Daily, weekly and multiples of a week, specifying time, day of week and repetition frequency","Repeating promotions are not supported — each Friday must be set up separately"], correct:2 },
+        { q:"Where do you report on promotions and promotion groups?",
+          options:["System Reports → Promotions","Accounting → Shift Register","Price Book → Utilities → PriceBook Export Viewer","Dry Goods → Physical Count"], correct:0 }
+      ]
+    },
+    {
+      name: "Finance & Accounting Department",
+      desc: "Accounting (Registers, General Ledger, A/P, A/R), System (Tenders, Taxes, Special Charges), Price Book (Characteristic Codes) and System Reports.",
+      questions: [
+        { q:"What are the three accounting registers in Envoy that post store data to the general ledger?",
+          options:["Shift Register, Inventory Register, Purchase Register","Range Register, Change Register, Preview Register","Asset Register, Liability Register, Revenue Register","Cash Register, Credit Register, Adjustment Register"], correct:0 },
+        { q:"Which register is used to post sales data received from the stores to the general ledger?",
+          options:["Inventory Register","Shift Register","Purchase Register","Journal Entry Register"], correct:1 },
+        { q:"The Inventory Register is used to post which type of data to the general ledger?",
+          options:["Invoices, credit memos and debit memos","Shift sales and tender totals","Physical counts, adjustments, transfers and deliveries","Bank deposits and cheques"], correct:2 },
+        { q:"The Purchase Register is used to post which transactions to the general ledger?",
+          options:["Invoices, credits and debits (including payments)","Pump and stick readings","Promotion redemptions","Price change history"], correct:0 },
+        { q:"On the Shift Register screen the Update button is disabled. What is the most likely reason?",
+          options:["The fiscal year has not been created","There is no check mark in the In Balance field — the register is out of balance","The store is a skeleton store","A promotion is currently in effect"], correct:1 },
+        { q:"A shift register is out of balance. Where does Envoy direct you to investigate?",
+          options:["Go to Cash/Sales Reconciliation and verify the transactions in the Daily Cash Summary screen, or print the Sales Journal Details report","Price Book → Utilities → Lookup UPC/PLU","Fuel → Stick Readings","Price Book → Promotions → Promotion Manager"], correct:0 },
+        { q:"The Undo Update button, which reverses a register update to the general ledger, is available:",
+          options:["At any time, including after year end","Only as long as the Day End has not been done","Only after the fiscal period has been closed","Only to users with Security Reports rights"], correct:1 },
+        { q:"When must the accounting registers be updated to the general ledger?",
+          options:["Only at financial year end","Before you print any report in Envoy","After the financial statements have been printed","Updating is optional and has no effect on reporting"], correct:1 },
+        { q:"In the Chart of Accounts, which three Line Types can be assigned to a general ledger line?",
+          options:["Debit, Credit and Balance","Asset, Liability and Equity","Title, Account and Total","Daily, Weekly and Monthly"], correct:2 },
+        { q:"In the Fiscal Year setup, what is the purpose of the \"No Entry after\" date?",
+          options:["It sets the effective date of scheduled price changes","It defines when promotions expire","It forces stores to close their entries within a reasonable time by preventing entries being posted to that period after the date","It sets the bank reconciliation statement date"], correct:2 },
+        { q:"A store user tries to enter a missing April dip reading in mid-May, after the April period's \"No Entry after\" date has passed. What happens?",
+          options:["The entry posts normally to April","The error message \"Date is within closed accounting period\" displays","The entry posts to the following financial year","The Shift Register is automatically reversed"], correct:1 },
+        { q:"Does Envoy support a fiscal year with more than 12 periods?",
+          options:["Yes — the system supports fiscal years with more than 12 periods","No — exactly 12 periods are required","Only 13 periods, and only for fuel","Only if the accounting interface is disabled"], correct:0 },
+        { q:"Which report identifies cash shortages and surpluses across a date range, can be filtered to a tolerance amount, and shows the cashier name so consistent patterns can be spotted?",
+          options:["Daily Summary Report","Trial Balance","Cash Over/Short History","Tender Reconciliation Summary"], correct:2 },
+        { q:"What does the Tax Report in System Reports show?",
+          options:["All the characteristic codes used for every product at a store within the date range specified","The fiscal year periods and their cut-off dates","Fuel excise paid per delivery","Outstanding vendor payments by tax code"], correct:0 },
+        { q:"Which exception report is used to identify significant increases or decreases in the Weighted Average Cost of products, using an amount or percentage threshold?",
+          options:["Negative On Hand","Gross Profit Exceptions","Average Cost report (System Reports → Exceptions → Average Cost)","Refunds"], correct:2 }
+      ]
+    }
+  ];
+  const TOTAL_Q = SECTIONS.reduce((n,s)=>n+s.questions.length,0);
+
+  /* ================= STATE ================= */
+  const state = {
+    participant: { name:"", email:"", company:"", dept:"" },
+    answers: {},           // key "s-q" -> selected option index
+    currentSection: 0,
+    startedAt: null
+  };
+
+  /* ================= PLATFORM CAPABILITIES ================= */
+  let dbNS = null, userNS = null, isAdmin = false;
+  let submissionsCache = [];
+  let unsubscribeSubmissions = null;
+
+  async function initCapabilities(){
+    try{
+      if(window.claude && window.claude.use){
+        userNS = await window.claude.use("user");
+        dbNS = await window.claude.use("db");
+      }
+    }catch(e){ console.warn("Capability init failed", e); }
+
+    if(userNS){
+      try{
+        isAdmin = (userNS.isOwner && userNS.isOwner()) || (userNS.canEdit && userNS.canEdit());
+      }catch(e){ isAdmin = false; }
+    }
+    if(isAdmin){
+      $("btn-open-dashboard").style.display = "inline-flex";
+    }
+    if(location.hash === "#dashboard"){
+      openDashboard();
+    }
+  }
+
+  async function saveSubmissionToDashboard(r){
+    if(!dbNS) return;
+    try{
+      const p = state.participant;
+      const answersOut = {};
+      SECTIONS.forEach(function(sec, sIdx){
+        sec.questions.forEach(function(item, qIdx){
+          const k = keyFor(sIdx, qIdx);
+          answersOut[k] = { chosen: state.answers[k], correct: item.correct };
+        });
+      });
+      let uid = null;
+      try{ uid = userNS ? await userNS.id() : null; }catch(e){ uid = null; }
+      await dbNS.collection("submissions").add({
+        name: p.name, email: p.email, company: p.company, department: p.dept,
+        pct: r.pct, totalCorrect: r.totalCorrect, totalQ: r.totalQ,
+        perSection: r.perSection,
+        answers: answersOut,
+        userId: uid,
+        submittedAt: r.finishedAt.toISOString()
+      });
+    }catch(e){ console.warn("Could not save submission for dashboard", e); }
+  }
+
+  /* ================= HELPERS ================= */
+  function $(id){ return document.getElementById(id); }
+  function showScreen(id){
+    document.querySelectorAll(".screen").forEach(function(el){ el.classList.remove("active"); });
+    $(id).classList.add("active");
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  function keyFor(s,q){ return s+"-"+q; }
+  function answeredCountTotal(){
+    return Object.keys(state.answers).length;
+  }
+
+  /* ================= REGISTRATION ================= */
+  const validators = {
+    "in-name":  v => v.trim().length > 1,
+    "in-email": v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),
+    "in-company": v => v.trim().length > 0,
+    "in-dept": v => v.trim().length > 0
+  };
+  const fieldWraps = { "in-name":"f-name", "in-email":"f-email", "in-company":"f-company", "in-dept":"f-dept" };
+
+  function validateField(inputId){
+    const val = $(inputId).value;
+    const ok = validators[inputId](val);
+    const wrap = $(fieldWraps[inputId]);
+    wrap.classList.toggle("has-err", !ok);
+    $(inputId).classList.toggle("err", !ok);
+    return ok;
+  }
+
+  $("reg-form").addEventListener("submit", function(e){
+    e.preventDefault();
+    const ids = Object.keys(validators);
+    let allOk = true;
+    ids.forEach(function(id){ if(!validateField(id)) allOk = false; });
+    if(!allOk){
+      const firstBad = ids.find(id => $(id).classList.contains("err"));
+      if(firstBad){ $(firstBad).focus(); }
+      return;
+    }
+    state.participant.name = $("in-name").value.trim();
+    state.participant.email = $("in-email").value.trim();
+    state.participant.company = $("in-company").value.trim();
+    state.participant.dept = $("in-dept").value.trim();
+    state.startedAt = new Date();
+    state.currentSection = 0;
+    renderSection(0);
+    showScreen("screen-quiz");
+  });
+  Object.keys(validators).forEach(function(id){
+    $(id).addEventListener("blur", function(){ validateField(id); });
+  });
+
+  /* ================= QUIZ RENDERING ================= */
+  function renderSection(sIdx){
+    const sec = SECTIONS[sIdx];
+    $("sec-title").textContent = sec.name;
+    $("sec-desc").textContent = sec.desc;
+    $("progress-label").textContent = "Section " + (sIdx+1) + " of " + SECTIONS.length + " — " + sec.name;
+
+    const container = $("questions-container");
+    container.innerHTML = "";
+    sec.questions.forEach(function(item, qIdx){
+      const k = keyFor(sIdx, qIdx);
+      const div = document.createElement("div");
+      div.className = "question";
+      div.id = "q-" + k;
+
+      const head = document.createElement("div");
+      head.className = "q-head";
+      const num = document.createElement("div");
+      num.className = "q-num";
+      num.textContent = (qIdx+1);
+      const qt = document.createElement("div");
+      qt.className = "q-text";
+      qt.textContent = item.q;
+      head.appendChild(num); head.appendChild(qt);
+      div.appendChild(head);
+
+      const opts = document.createElement("div");
+      opts.className = "options";
+      item.options.forEach(function(optText, oIdx){
+        const label = document.createElement("label");
+        label.className = "option";
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = "q-" + k;
+        input.value = oIdx;
+        if(state.answers[k] === oIdx){ input.checked = true; label.classList.add("selected"); }
+        input.addEventListener("change", function(){
+          state.answers[k] = oIdx;
+          div.classList.remove("unanswered");
+          Array.from(opts.querySelectorAll(".option")).forEach(o=>o.classList.remove("selected"));
+          label.classList.add("selected");
+          updateProgress();
+        });
+        const span = document.createElement("span");
+        span.textContent = optText;
+        label.appendChild(input); label.appendChild(span);
+        opts.appendChild(label);
+      });
+      div.appendChild(opts);
+
+      const flag = document.createElement("div");
+      flag.className = "q-flag";
+      flag.textContent = "Please select an answer for this question.";
+      div.appendChild(flag);
+
+      container.appendChild(div);
+    });
+
+    $("btn-back").disabled = (sIdx === 0);
+    $("btn-next").textContent = (sIdx === SECTIONS.length - 1) ? "Submit assessment" : "Next section";
+    updateProgress();
+  }
+
+  function updateProgress(){
+    const answered = answeredCountTotal();
+    $("progress-count").textContent = answered + " / " + TOTAL_Q + " answered";
+    $("progress-fill").style.width = Math.round((answered/TOTAL_Q)*100) + "%";
+  }
+
+  function currentSectionComplete(sIdx){
+    const sec = SECTIONS[sIdx];
+    let missing = [];
+    sec.questions.forEach(function(_, qIdx){
+      const k = keyFor(sIdx, qIdx);
+      if(!(k in state.answers)) missing.push(qIdx);
+    });
+    return missing;
+  }
+
+  $("btn-back").addEventListener("click", function(){
+    if(state.currentSection > 0){
+      state.currentSection--;
+      renderSection(state.currentSection);
+    }
+  });
+
+  $("btn-next").addEventListener("click", function(){
+    const missing = currentSectionComplete(state.currentSection);
+    if(missing.length > 0){
+      missing.forEach(function(qIdx){
+        const el = $("q-" + keyFor(state.currentSection, qIdx));
+        el.classList.add("unanswered");
+      });
+      const firstMissing = $("q-" + keyFor(state.currentSection, missing[0]));
+      firstMissing.scrollIntoView({behavior:"smooth", block:"center"});
+      return;
+    }
+    if(state.currentSection < SECTIONS.length - 1){
+      state.currentSection++;
+      renderSection(state.currentSection);
+    } else {
+      submitAssessment();
+    }
+  });
+
+  /* ================= GRADING & RESULTS ================= */
+  let lastResults = null;
+
+  function submitAssessment(){
+    const perSection = SECTIONS.map(function(sec, sIdx){
+      let correct = 0;
+      sec.questions.forEach(function(item, qIdx){
+        if(state.answers[keyFor(sIdx,qIdx)] === item.correct) correct++;
+      });
+      return { name: sec.name, correct: correct, total: sec.questions.length };
+    });
+    const totalCorrect = perSection.reduce((n,s)=>n+s.correct,0);
+    const pct = Math.round((totalCorrect/TOTAL_Q)*100);
+    lastResults = {
+      pct: pct, totalCorrect: totalCorrect, totalQ: TOTAL_Q,
+      perSection: perSection, finishedAt: new Date()
+    };
+    renderResults();
+    showScreen("screen-results");
+    saveSubmissionToDashboard(lastResults);
+  }
+
+  function tierCopy(pct){
+    if(pct >= 90) return { headline:"Outstanding work, ", sub:"You've shown a strong command of Envoy HOS across pricing, promotions, and finance." };
+    if(pct >= 75) return { headline:"Well done, ", sub:"A solid result — you clearly know your way around Envoy HOS, with just a few areas worth a second look." };
+    if(pct >= 60) return { headline:"Good effort, ", sub:"You're on the right track. Review the lower-scoring modules below before your next session." };
+    return { headline:"Assessment complete, ", sub:"This gives you a good baseline. Revisit the training material for the modules below and try again when you're ready." };
+  }
+
+  function renderResults(){
+    const r = lastResults;
+    const p = state.participant;
+    const tier = tierCopy(r.pct);
+
+    $("cert-headline").textContent = tier.headline + p.name;
+    $("cert-sub").textContent = tier.sub;
+    $("cert-score").innerHTML = r.pct + "<sup>%</sup>";
+    $("cert-frac").textContent = r.totalCorrect + " of " + r.totalQ + " correct";
+
+    $("m-name").textContent = p.name;
+    $("m-email").textContent = p.email;
+    $("m-company").textContent = p.company;
+    $("m-dept").textContent = p.dept;
+
+    const dateStr = r.finishedAt.toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
+    const timeStr = r.finishedAt.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+    $("cert-id").textContent = "Completed " + dateStr + " · " + timeStr;
+
+    const bd = $("sec-breakdown");
+    bd.innerHTML = "";
+    r.perSection.forEach(function(s){
+      const secPct = Math.round((s.correct/s.total)*100);
+      const row = document.createElement("div");
+      row.className = "sec-row";
+      row.innerHTML =
+        '<div class="sec-name">'+s.name+'</div>'+
+        '<div class="sec-bar-track"><div class="sec-bar-fill" style="width:'+secPct+'%"></div></div>'+
+        '<div class="sec-score">'+s.correct+'/'+s.total+'</div>';
+      bd.appendChild(row);
+    });
+
+    renderReview();
+  }
+
+  function renderReview(){
+    const list = $("review-list");
+    list.innerHTML = "";
+    SECTIONS.forEach(function(sec, sIdx){
+      const head = document.createElement("div");
+      head.className = "rev-section-head";
+      head.textContent = sec.name;
+      list.appendChild(head);
+      sec.questions.forEach(function(item, qIdx){
+        const k = keyFor(sIdx, qIdx);
+        const chosen = state.answers[k];
+        const isCorrect = chosen === item.correct;
+        const row = document.createElement("div");
+        row.className = "rev-q";
+        const letters = ["A","B","C","D"];
+        row.innerHTML =
+          '<div class="rev-icon '+(isCorrect?'ok':'no')+'">'+(isCorrect?'✓':'✕')+'</div>'+
+          '<div>'+
+            '<div class="rev-q-text">'+(qIdx+1)+'. '+item.q+'</div>'+
+            '<div class="rev-answer">Your answer: <b>'+letters[chosen]+') '+item.options[chosen]+'</b>'+
+            (isCorrect ? '' : '<br><span class="correct-line">Correct answer: '+letters[item.correct]+') '+item.options[item.correct]+'</span>')+
+            '</div>'+
+          '</div>';
+        list.appendChild(row);
+      });
+    });
+  }
+
+  $("btn-review").addEventListener("click", function(){
+    const list = $("review-list");
+    const open = list.classList.toggle("open");
+    $("btn-review").textContent = open ? "Hide my answers" : "Review my answers";
+  });
+
+  /* ================= PRINT / DOWNLOAD ================= */
+  $("btn-print").addEventListener("click", function(){
+    window.print();
+  });
+
+  function setStatus(msg, ok){
+    const el = $("save-status");
+    el.textContent = msg;
+    el.className = "save-status " + (ok===true ? "ok" : ok===false ? "err" : "");
+  }
+
+  function safeFileBase(){
+    const p = state.participant;
+    return ("Envoy-HOS-Certificate-" + p.name).replace(/[^a-z0-9\-]+/gi,"_").slice(0,80);
+  }
+
+  async function captureCertificateCanvas(){
+    return html2canvas($("certificate"), { scale: 2, backgroundColor: "#07003F", useCORS: true });
+  }
+
+  $("btn-img").addEventListener("click", async function(){
+    setStatus("Preparing image…");
+    try{
+      const canvas = await captureCertificateCanvas();
+      const blob = await new Promise(res => canvas.toBlob(res, "image/png", 1.0));
+      const r = await offerDownload(safeFileBase() + ".png", blob);
+      setStatus(r.message, r.ok);
+    }catch(e){
+      console.error(e);
+      setStatus("Couldn't generate the image. Try Print instead.", false);
+    }
+  });
+
+  $("btn-pdf").addEventListener("click", async function(){
+    setStatus("Preparing PDF…");
+    try{
+      const canvas = await captureCertificateCanvas();
+      const imgData = canvas.toDataURL("image/png", 1.0);
+      const { jsPDF } = window.jspdf;
+      const pxW = canvas.width, pxH = canvas.height;
+      const pdfWidthMM = 280;
+      const pdfHeightMM = pdfWidthMM * (pxH/pxW);
+      const doc = new jsPDF({ orientation: pdfHeightMM > pdfWidthMM ? "portrait" : "landscape", unit: "mm", format: [pdfWidthMM, pdfHeightMM] });
+      doc.addImage(imgData, "PNG", 0, 0, pdfWidthMM, pdfHeightMM);
+      const blob = doc.output("blob");
+      const r = await offerDownload(safeFileBase() + ".pdf", blob);
+      setStatus(r.message, r.ok);
+    }catch(e){
+      console.error(e);
+      setStatus("Couldn't generate the PDF. Try Print instead.", false);
+    }
+  });
+
+  function handleDownloadError(err, kind){
+    if(err && err.code === "declined"){ setStatus("Download cancelled.", null); return; }
+    if(err && err.code === "rate_limited"){ setStatus("Please try again in a moment.", false); return; }
+    console.error(err);
+    setStatus("Couldn't save the " + kind + ". Try Print instead.", false);
+  }
+
+  const inClaudeRuntime = !!(window.claude && window.claude.use);
+
+  async function offerDownload(filename, data){
+    // Returns {ok:true} on success, {ok:false, message} otherwise.
+    if(inClaudeRuntime){
+      let downloads = null;
+      try{ downloads = await window.claude.use("downloads"); }catch(e){ downloads = null; }
+      if(downloads){
+        try{
+          const result = await downloads.save({ filename: filename, data: data });
+          return { ok:true, message: result.status === "saved" ? "Saved." : "Delivered." };
+        }catch(err){
+          if(err && err.code === "declined") return { ok:null, message:"Download cancelled." };
+          if(err && err.code === "rate_limited") return { ok:false, message:"Please try again in a moment." };
+          console.warn(err);
+          return { ok:false, message:"Couldn't save the file here. Try Print instead." };
+        }
+      }
+      // Inside claude.ai but this view can't run downloads — a plain link is inert here.
+      return { ok:false, message:"Download isn't available in this view — use Print instead." };
+    }
+    // Not running inside claude.ai at all (e.g. self-hosted) — a normal browser download works.
+    fallbackDownload(data instanceof Blob ? data : new Blob([data]), filename);
+    return { ok:true, message:"Downloaded — check your downloads folder." };
+  }
+
+  function fallbackDownload(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  }
+
+  /* ================= ORGANIZER DASHBOARD ================= */
+  let screenBeforeDashboard = "screen-register";
+
+  function openDashboard(){
+    const activeNow = document.querySelector(".screen.active");
+    if(activeNow && activeNow.id !== "screen-dashboard") screenBeforeDashboard = activeNow.id;
+    showScreen("screen-dashboard");
+    location.hash = "dashboard";
+
+    $("dash-gate").style.display = "none";
+    $("dash-nodb").style.display = "none";
+    $("dash-body").style.display = "none";
+
+    if(!isAdmin){
+      $("dash-gate").style.display = "block";
+      return;
+    }
+    if(!dbNS){
+      $("dash-nodb").style.display = "block";
+      return;
+    }
+    $("dash-body").style.display = "block";
+    subscribeSubmissions();
+  }
+
+  function closeDashboard(){
+    if(unsubscribeSubmissions){ unsubscribeSubmissions(); unsubscribeSubmissions = null; }
+    if(location.hash === "#dashboard") history.replaceState(null, "", location.pathname + location.search);
+    showScreen(screenBeforeDashboard);
+  }
+
+  $("btn-open-dashboard").addEventListener("click", openDashboard);
+  $("btn-close-dashboard").addEventListener("click", closeDashboard);
+
+  function subscribeSubmissions(){
+    if(unsubscribeSubmissions){ unsubscribeSubmissions(); }
+    try{
+      unsubscribeSubmissions = dbNS.collection("submissions").onSnapshot(
+        function(snap){
+          submissionsCache = snap.docs.map(function(d){ return Object.assign({ _id: d.id }, d.data()); });
+          submissionsCache.sort(function(a,b){ return new Date(b.submittedAt) - new Date(a.submittedAt); });
+          renderDashboard();
+        },
+        function(err){ console.warn("Dashboard subscription error", err); }
+      );
+    }catch(e){ console.warn(e); }
+  }
+
+  function scoreTier(pct){ return pct >= 80 ? "hi" : pct >= 60 ? "mid" : "lo"; }
+
+  function renderDashboard(list){
+    const rows = list || submissionsCache;
+    $("dstat-count").textContent = submissionsCache.length;
+
+    if(submissionsCache.length === 0){
+      $("dstat-avg").textContent = "—";
+      $("dstat-pass").textContent = "—";
+      $("dstat-low").textContent = "—";
+    } else {
+      const avg = Math.round(submissionsCache.reduce((n,s)=>n+s.pct,0) / submissionsCache.length);
+      const passRate = Math.round(100 * submissionsCache.filter(s=>s.pct>=70).length / submissionsCache.length);
+      $("dstat-avg").textContent = avg + "%";
+      $("dstat-pass").textContent = passRate + "%";
+
+      const sectionTotals = {};
+      submissionsCache.forEach(function(s){
+        (s.perSection||[]).forEach(function(sec){
+          if(!sectionTotals[sec.name]) sectionTotals[sec.name] = {correct:0,total:0};
+          sectionTotals[sec.name].correct += sec.correct;
+          sectionTotals[sec.name].total += sec.total;
+        });
+      });
+      let weakest = null, weakestPct = 101;
+      Object.keys(sectionTotals).forEach(function(name){
+        const t = sectionTotals[name];
+        const p = t.total ? (t.correct/t.total*100) : 100;
+        if(p < weakestPct){ weakestPct = p; weakest = name; }
+      });
+      $("dstat-low").textContent = weakest || "—";
+    }
+
+    const tbody = $("dash-tbody");
+    tbody.innerHTML = "";
+    $("dash-empty").style.display = rows.length === 0 ? "block" : "none";
+    $("dash-table").style.display = rows.length === 0 ? "none" : "table";
+
+    rows.forEach(function(s){
+      const tr = document.createElement("tr");
+      const bySection = {};
+      (s.perSection||[]).forEach(function(sec){ bySection[sec.name] = sec; });
+      function cell(name){
+        const sec = bySection[name];
+        return sec ? sec.correct + "/" + sec.total : "—";
+      }
+      const dt = new Date(s.submittedAt);
+      const dtStr = isNaN(dt) ? "—" : dt.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + " · " + dt.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+      tr.innerHTML =
+        '<td><div class="dash-name">'+escapeHtml(s.name||"—")+'</div><div class="dash-email">'+escapeHtml(s.email||"")+'</div></td>'+
+        '<td>'+escapeHtml(s.company||"—")+'</td>'+
+        '<td>'+escapeHtml(s.department||"—")+'</td>'+
+        '<td><span class="score-chip '+scoreTier(s.pct)+'">'+s.pct+'%</span> <span class="mini-frac">'+s.totalCorrect+'/'+s.totalQ+'</span></td>'+
+        '<td>'+cell("Pricing Manager")+'</td>'+
+        '<td>'+cell("Promotion Manager")+'</td>'+
+        '<td>'+cell("Finance & Accounting Department")+'</td>'+
+        '<td>'+dtStr+'</td>';
+      tr.addEventListener("click", function(){ openDetail(s); });
+      tbody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  $("dash-search").addEventListener("input", function(){
+    const q = this.value.trim().toLowerCase();
+    if(!q){ renderDashboard(); return; }
+    const filtered = submissionsCache.filter(function(s){
+      return (s.name||"").toLowerCase().includes(q) ||
+             (s.email||"").toLowerCase().includes(q) ||
+             (s.company||"").toLowerCase().includes(q);
+    });
+    renderDashboard(filtered);
+  });
+
+  function openDetail(s){
+    $("dd-name").textContent = s.name || "—";
+    $("dd-meta").textContent = [s.email, s.company, s.department].filter(Boolean).join(" · ");
+    $("dd-score").textContent = s.pct + "% — " + s.totalCorrect + " of " + s.totalQ + " correct";
+
+    const secWrap = $("dd-sections");
+    secWrap.innerHTML = "";
+    (s.perSection||[]).forEach(function(sec){
+      const secPct = Math.round((sec.correct/sec.total)*100);
+      const row = document.createElement("div");
+      row.className = "sec-row";
+      row.style.color = "#0D0B2E";
+      row.innerHTML =
+        '<div class="sec-name" style="color:var(--navy);">'+sec.name+'</div>'+
+        '<div class="sec-bar-track" style="background:var(--line);"><div class="sec-bar-fill" style="width:'+secPct+'%;background:var(--navy);"></div></div>'+
+        '<div class="sec-score" style="color:var(--navy);">'+sec.correct+'/'+sec.total+'</div>';
+      secWrap.appendChild(row);
+    });
+
+    const rev = $("dd-review");
+    rev.innerHTML = "";
+    if(s.answers){
+      SECTIONS.forEach(function(sec, sIdx){
+        const head = document.createElement("div");
+        head.className = "rev-section-head";
+        head.textContent = sec.name;
+        rev.appendChild(head);
+        sec.questions.forEach(function(item, qIdx){
+          const k = keyFor(sIdx, qIdx);
+          const a = s.answers[k];
+          if(!a) return;
+          const isCorrect = a.chosen === item.correct;
+          const letters = ["A","B","C","D"];
+          const row = document.createElement("div");
+          row.className = "rev-q";
+          row.innerHTML =
+            '<div class="rev-icon '+(isCorrect?'ok':'no')+'">'+(isCorrect?'✓':'✕')+'</div>'+
+            '<div>'+
+              '<div class="rev-q-text">'+(qIdx+1)+'. '+item.q+'</div>'+
+              '<div class="rev-answer">Answer: <b>'+(typeof a.chosen==="number" ? letters[a.chosen]+') '+item.options[a.chosen] : "—")+'</b>'+
+              (isCorrect ? '' : '<br><span class="correct-line">Correct: '+letters[item.correct]+') '+item.options[item.correct]+'</span>')+
+              '</div>'+
+            '</div>';
+          rev.appendChild(row);
+        });
+      });
+    }
+
+    $("dash-detail-overlay").classList.add("open");
+  }
+  $("btn-close-detail").addEventListener("click", function(){
+    $("dash-detail-overlay").classList.remove("open");
+  });
+  $("dash-detail-overlay").addEventListener("click", function(e){
+    if(e.target === this) this.classList.remove("open");
+  });
+
+  $("btn-export-csv").addEventListener("click", async function(){
+    if(submissionsCache.length === 0) return;
+    const cols = ["Name","Email","Company","Department","Score %","Correct","Total","Pricing Manager","Promotion Manager","Finance & Accounting","Submitted At"];
+    function csvEsc(v){ v = String(v==null?"":v); return '"' + v.replace(/"/g,'""') + '"'; }
+    const lines = [cols.map(csvEsc).join(",")];
+    submissionsCache.forEach(function(s){
+      const bySection = {};
+      (s.perSection||[]).forEach(function(sec){ bySection[sec.name] = sec.correct+"/"+sec.total; });
+      lines.push([
+        s.name, s.email, s.company, s.department, s.pct, s.totalCorrect, s.totalQ,
+        bySection["Pricing Manager"]||"", bySection["Promotion Manager"]||"", bySection["Finance & Accounting Department"]||"",
+        s.submittedAt
+      ].map(csvEsc).join(","));
+    });
+    const csv = lines.join("\r\n");
+    const filename = "Envoy-HOS-Assessment-Results.csv";
+    try{
+      await offerDownload(filename, csv);
+    }catch(e){ console.warn(e); }
+  });
+
+  window.addEventListener("hashchange", function(){
+    if(location.hash === "#dashboard"){ openDashboard(); }
+  });
+
+  initCapabilities();
+
+})();
+</script>
+</body>
+</html>
